@@ -1,0 +1,2 @@
+* text=auto eol=lf
+docs/lens.md -text whitespace=cr-at-eol

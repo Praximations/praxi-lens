@@ -1,0 +1,24 @@
+{
+  "name": "@praxi/lens",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Renderer-independent system understanding for Praxi",
+  "license": "UNLICENSED",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" }
+  },
+  "files": ["dist"],
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test tests/*.test.mjs",
+    "check": "node scripts/check.mjs",
+    "checkpoint": "node scripts/checkpoint.mjs",
+    "demo": "npm run build && node examples/demo.mjs"
+  },
+  "dependencies": { "zod": "3.25.76" },
+  "devDependencies": { "typescript": "5.9.3" }
+}
