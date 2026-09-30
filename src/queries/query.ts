@@ -1,9 +1,11 @@
 import { z } from "zod";
 import { idSchema, type SystemModel } from "../system-model/schema.js";
 import { parseSystemModel } from "../system-model/validate.js";
+import { overviewSelection } from "./overview.js";
 
 const limit = z.number().int().min(1).max(500).default(40);
 export const viewQuerySchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("overview"), rootId: idSchema.optional(), depth: z.number().int().min(1).max(20).default(1), limit }).strict(),
   z.object({ kind: z.literal("hierarchy"), rootId: idSchema.optional(), depth: z.number().int().min(0).max(20).default(1), limit }).strict(),
   z.object({ kind: z.literal("neighbors"), componentId: idSchema,
     direction: z.enum(["incoming", "outgoing", "both"]).default("outgoing"),
@@ -30,6 +32,17 @@ export function queryModel(input: SystemModel, queryInput: ViewQuery): QueryResu
   const entities = [model.system, ...model.components];
   const ids = new Set(entities.map(e => e.id));
   const requireId = (id: string) => { if (!ids.has(id)) throw new Error(`unknown_entity:${id}`); };
+  if (query.kind === "overview") {
+    const rootId = query.rootId ?? model.system.id;
+    requireId(rootId);
+    const result = overviewSelection(model, rootId, query.depth, query.limit);
+    return { query, entityIds: result.entityIds,
+      // These are underlying model IDs, before generateView projects the endpoints.
+      relationshipIds: model.relationships.filter(r => {
+        const from = result.representatives.get(r.from), to = result.representatives.get(r.to);
+        return from && to && from !== to;
+      }).map(r => r.id).sort(), orderedRelationshipIds: [], truncated: result.truncated };
+  }
   const allRelationships = [...model.relationships].sort((a, b) => a.id.localeCompare(b.id));
   const relationshipKinds = "relationshipKinds" in query ? query.relationshipKinds : undefined;
   const relationships = allRelationships.filter(r => !relationshipKinds || relationshipKinds.includes(r.kind));

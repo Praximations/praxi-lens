@@ -1,12 +1,12 @@
 # Generated checkpoint
 
-Updated: 2026-09-30T02:01:47.585Z
+Updated: 2026-09-30T18:56:09.232Z
 
 Read HANDOFF.md for decisions, limitations, and the next task. This file records actual local state; it does not imply a deployment or push.
 
 - Branch: main
-- HEAD at capture time: afc030e12a586417ba75741716945621ab3de6b9
-- Source SHA-256: c612798f5dc34874a0fa519137092c03b985d241c33b5d205f470764f1a844e5
+- HEAD at capture time: 6911fc5ef91d6bcf5c1a15ebc230187f4abc46b5
+- Source SHA-256: 4b1125ef89d73c6e5077d793233b851545d9b5bf97268a18c133c7aa811ceba0
 - Node: v24.18.0
 
 ## Validation from this checkpoint
@@ -19,9 +19,11 @@ The digest covers src, tests, examples, scripts, package manifests, and tsconfig
 ## Worktree at capture time
 
 ```text
- M package-lock.json
+M package-lock.json
  M package.json
-?? src/adapters/github/
-?? src/adapters/repository/
-?? tests/repository.test.mjs
+ M src/queries/query.ts
+ M src/views/generate.ts
+ M src/views/spec.ts
+ M tests/lens.test.mjs
+?? src/queries/overview.ts
 ```

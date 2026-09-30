@@ -90,3 +90,8 @@ Unknown extension namespaces round-trip with diagnostics. Register a versioned s
 - Lens does not own rendering (Vorylen), shared information storage (Praxium Core), or scheduling (Vireon).
 
 See HANDOFF.md for next steps and docs/costs.md for operating costs.
+# Overview projection (0.3)
+
+`generateView(model, { kind: "overview", rootId: model.system.id, depth: 1 })` selects the visible frontier of containment. Relationships inside hidden descendants are summarized between visible ancestors, grouped by direction and kind. Each overview edge includes `relationshipIds` for its exact supporting model references. Internal references within one collapsed component are omitted. Limits never produce edges with missing endpoints.
+
+Projection does not mutate SystemModel or imply runtime execution. Its provenance is at most DERIVED and never stronger than its supporting claims. `queryModel` returns the underlying relationship IDs; `generateView` produces the projected endpoints. Existing hierarchy, neighbor, path, search and flow behavior is unchanged. Renderers should use the optional edge `relationshipIds` field to open the original evidence.

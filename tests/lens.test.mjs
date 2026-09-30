@@ -81,6 +81,38 @@ test('dependency traversal supports direction, cycles, kind filtering, and bound
   assert.throws(() => queryModel(model, { kind: 'hierarchy', limit: 501 }));
 });
 
+test('overview rolls nested relationships up with traceable evidence, without changing facts', () => {
+  const model = parseSystemModel(softwareModel);
+  const before = JSON.stringify(model);
+  const view = generateView(model, { kind: 'overview' });
+  assert.deepEqual(new Set(view.nodes.map(n => n.id)), new Set(['api', 'db', 'ui']));
+  assert.equal(view.edges.some(e => e.from === e.to), false);
+  const reads = view.edges.find(e => e.from === 'api' && e.to === 'db');
+  assert.deepEqual(reads.relationshipIds, ['auth-db']);
+  assert.equal(reads.provenance.level, 'USER_DEFINED');
+  assert.ok(reads.provenance.evidenceIds.length);
+  assert.deepEqual(view.sequence, []);
+  assert.equal(JSON.stringify(model), before);
+  assert.deepEqual(generateView(model, { kind: 'overview', rootId: 'api' }).nodes.map(n => n.id), ['auth']);
+  assert.equal(generateView(model, { kind: 'overview', rootId: 'api' }).edges.length, 0);
+  assert.equal(generateView(model, { kind: 'overview', depth: 2 }).nodes.some(n => n.id === 'auth'), true);
+  assert.equal(generateView(model, { kind: 'overview', limit: 1 }).truncated, true);
+  assert.throws(() => generateView(model, { kind: 'overview', rootId: 'missing' }), /unknown_entity/);
+});
+
+test('overview groups parallel references and never upgrades inferred claims', () => {
+  const raw = clone();
+  raw.relationships.push({ ...raw.relationships.find(r => r.id === 'auth-db'), id: 'second-read',
+    provenance: { ...raw.system.provenance, level: 'INFERRED' } });
+  const view = generateView(parseSystemModel(raw), { kind: 'overview' });
+  const edge = view.edges.find(e => e.from === 'api' && e.to === 'db');
+  assert.deepEqual(edge.relationshipIds, ['auth-db', 'second-read']);
+  assert.equal(edge.provenance.level, 'INFERRED');
+  assert.equal(viewSpecSchema.safeParse(view).success, true);
+  const limited = generateView(parseSystemModel(raw), { kind: 'overview', limit: 2 });
+  assert.ok(limited.edges.every(e => limited.nodes.some(n => n.id === e.from) && limited.nodes.some(n => n.id === e.to)));
+});
+
 test('directed shortest paths do not fabricate reachability or observed behavior', () => {
   const model = parseSystemModel(softwareModel);
   const path = generateView(model, { kind: 'path', fromId: 'ui', toId: 'db' });

@@ -1,18 +1,31 @@
 {
   "name": "@praxi/lens",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "Renderer-independent system understanding for Praxi",
   "license": "UNLICENSED",
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
-    "./github": { "types": "./dist/adapters/github/index.d.ts", "import": "./dist/adapters/github/index.js" },
-    "./repository": { "types": "./dist/adapters/repository/index.d.ts", "import": "./dist/adapters/repository/index.js" }
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./github": {
+      "types": "./dist/adapters/github/index.d.ts",
+      "import": "./dist/adapters/github/index.js"
+    },
+    "./repository": {
+      "types": "./dist/adapters/repository/index.d.ts",
+      "import": "./dist/adapters/repository/index.js"
+    }
   },
-  "files": ["dist"],
-  "engines": { "node": ">=22" },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -21,6 +34,11 @@
     "checkpoint": "node scripts/checkpoint.mjs",
     "demo": "npm run build && node examples/demo.mjs"
   },
-  "dependencies": { "zod": "3.25.76", "@babel/parser": "7.29.7" },
-  "devDependencies": { "typescript": "5.9.3" }
+  "dependencies": {
+    "zod": "3.25.76",
+    "@babel/parser": "7.29.7"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3"
+  }
 }

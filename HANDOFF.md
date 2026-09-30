@@ -1,51 +1,45 @@
-# Praxi Lens handoff
+﻿# Praxi Lens handoff
 
-Updated 2026-09-29. Read AGENTS.md and CHECKPOINT.md. The original 52-section prompt remains byte-for-byte in docs/lens.md; current product names are Vorylen and Vireon.
+Updated 2026-09-30. Read AGENTS.md and CHECKPOINT.md first. Full original vision: docs/lens.md (unchanged). Product names: Vorylen and Vireon.
 
 ## Current milestone
 
-User asked for Vorylen rendering and real GitHub analysis through the website today, with low running costs. User supplied Praximations/praxi-lens as the remote. SSH is unavailable on this machine, so equivalent HTTPS origin is configured.
+The user asked for a simpler, more powerful experience inspired by GitDiagram and similar tools, integrated into Praxi Dev. Core 0.3.0 and the diagram-first web redesign are implemented. Publishing this milestone is pending; the previous 0.2 implementation is already live at https://www.praximations.com/lens.
 
-Core 0.2 and web/GitHub preview are implemented, pushed and live at https://www.praximations.com/lens. Lens implementation commit: d98c037. Web implementation commit: 2c5770c. Both use main. Subsequent handoff-only commits do not change the tested implementation.
+## Implementation and boundaries
 
-## Implemented
-
-- Independent @praxi/lens TypeScript ESM package; experimental schema 0.1. SystemModel, ViewSpec, integrity checks, provenance, semantic overlays, hierarchy/neighbor/path/search/group/flow queries and deterministic explanation plans.
-- Software, ai-models, agents, databases, workflows metadata validators. Unknown extensions survive.
-- adapters/repository: snapshots to file/folder models, Babel AST module references, package dependencies. Stable IDs, unresolved-import reports, no code execution. Referenced packages are grouped under group:packages.
-- adapters/github: owner/repo validation, commit pinning, GitHub tree and bounded source reads. Optional read-only token goes only to api.github.com; redirects rejected. Public source uses raw.githubusercontent.com at the pinned SHA; private source uses authenticated blob API.
-- Limits: 1,200 files, 40 source files, 100 KB/file, 1.5 MB total source, four concurrent source fetches, 90-second network deadline. Partial coverage/errors are visible.
-- Vorylen route app/lens/page.tsx; reusable UI/worker in app/components/lens. No Lens backend/API/new Supabase tables. Analysis and credentials remain in browser memory.
-- UI: repo/ref/token inputs, cancel, real Express example, teaching example, model JSON import/export, focus, selection, depth, dependencies/direction, search, zoom/scroll, breadcrumbs/back, evidence links, guided inspection and coverage. Links in website Products and Dev navigation.
-- Vorylen installs vendor/praxi-lens-0.2.0.tgz pinned in its lockfile, so clean builds need no private registry credential or sibling directory. Refresh instructions: web vendor/README.md.
+- Independent renderer-free TypeScript ESM package @praxi/lens. Experimental SystemModel/ViewSpec schema 0.1, integrity checks, provenance, semantic overlays, deterministic explanation plans.
+- Core 0.3 adds the overview query: a containment frontier with descendant relationships projected onto visible ancestors, grouped by direction/kind. View edges preserve exact relationshipIds; query results use underlying IDs. Projection never upgrades evidence or fabricates runtime behavior. Source: src/queries/overview.ts, queries/query.ts, views/generate.ts, views/spec.ts.
+- Existing hierarchy/neighbor/path/search/group/flow queries, adapters, software/ai-models/agents/databases/workflows metadata validators remain. Unknown extensions survive.
+- GitHub adapter pins a commit, parses bounded JS/TS source with Babel and package dependencies without executing code. Limits: 1,200 files, 40 source files, 100 KB/file, 1.5 MB total source, four concurrent reads, 90-second network deadline. Coverage and unresolved aliases/imports are reported.
+- Public source is fetched from raw.githubusercontent.com; private source/token stays on api.github.com. Redirects rejected. No tokens/raw source in model output.
+- UI is in sibling Vorylen web, app/components/lens. Shared LensExplorer + worker + GraphCanvas renderer. Public /lens has one repository input; optional branch/token/import controls. Map opens after analysis or explicit example.
+- New graph: folder-level connections with evidence drawer, drag/keyboard pan, zoom, fit, expanded view, selection, search, focus/breadcrumbs/back, depends-on/used-by, path tracing, flows, optional file list/walkthrough/coverage, JSON import/export.
+- New authenticated /dev/lens is app/(dev)/dev/lens/page.tsx + components/devbranch/LensPage.tsx. Uses existing Dev shell/guards. Real selected project repository and branch prefill the analyzer; key changes terminate/reset the old worker when switching projects. Preview project repo is deliberately not treated as real. Standalone analysis works without a project.
+- Dev nav now links internally to /dev/lens; Repository page has Open Lens action. Existing checkpoint Architecture page remains separate.
+- GitHub account/OAuth tokens are not automatically shared with browser Lens. Private repos still require a user-provided read-only token in Options.
+- Web vendors praxi-lens-0.3.0.tgz plus lockfile: no sibling dependency, registry setup, backend, or database migrations. Source stays in Lens; coordinates/layout stay in Vorylen.
+- Browser memory only. Models are not persisted across navigation/reloads. Export explicitly downloads the model. No paid AI calls or new services.
 
 ## Validation
 
-- Lens npm run check: build and 21 tests passed, including AST syntax, unsafe paths, root-escape regression, URL allowlisting, mocked public/private transport, token confinement, rate-limit errors, graph integrity and interpretation/view behavior.
-- Live Node adapter on expressjs/express: 213 files, 40 source files, 165 references, commit 7ef98448f8b38099ab1ded55e458538ad47a51e7. Reported 40/142 source coverage and 32 unresolved imports.
-- Web production build, final typecheck and focused ESLint passed.
-- Chrome UI: teaching-example focus/semantic zoom, dependency view, search for lib/express.js, evidence links and real Express analysis through the worker passed. Desktop screenshot reviewed. Real private credentials and every mobile/UI control are not yet browser-tested.
-- Vercel deployment dpl_BZ2cod4oboi8cSh7WbnQG3wB1v58 is READY, built from web commit 2c5770c. Production /lens returned HTTP 200 with the GitHub CSP permissions.
-- On the production website, Praximations/praxi-lens analyzed successfully: 38 files, 26/26 eligible source files read, package-reference grouping visible. Its GitHub repository is public, so no token is needed. The live tab was left open with this result.
+Core npm run check: build + 23 tests passed (includes overview evidence/limits/direction/grouping, existing graph integrity, AST extraction, public/private token confinement, unsafe URLs and paths, rate-limit handling).
+Web production build + focused ESLint passed before final UI refinements; final checks and deployment status are recorded in web LENS_HANDOFF.md.
+Chrome local checks: sample folder drill-down, summarized-edge original reference inspection, directed path Web client -> Database (4 nodes/3 edges), real Praximations/praxi-lens analysis (38 files/26 source files at 6911fc5), search by full path, used-by query, 390px responsive layout, and Dev shell rendering via development-only harness.
+Real /dev/lens redirects unauthenticated users to login. Authenticated project/branch prefilling is implemented/typechecked but has not been exercised with a live signed-in project. Private tokens have mocked transport tests, not live credential tests. Browser viewport override reset after checks.
+Development harness /dev-preview?view=lens follows the existing production Vercel 404 guard.
 
-## Publishing state
+## Limits / next work
 
-Completed for this milestone. Core and web source are pushed to their approved repositories. Existing Vercel project praximations-web deploys the web repository automatically. No separate Lens Vercel service is needed. Web LENS_HANDOFF links back here; this is the authoritative final verification record.
+This release provides structural maps and static JS/TS references. No semantic business architecture, natural-language query/AI narrative, runtime call-graph proof, local checkout ingestion, incremental analysis, shared persistence, comparisons, or native clients yet. Layout is bounded/custom; very large/dense cyclic graphs need further layout work. Unconnected files remain visible; zoom/search/focus reduce density. Secret-path exclusions are not a full secret scanner. Import evidence labels are assertions.
+Existing web audit has 8 pre-existing advisories including critical Next 16.2.10 (reported fix 16.3.7); schedule a tested upgrade. Lens core audit was clean in the previous milestone. No dependency audit rerun for this UI milestone.
 
-## Next product work and limits
+## Continuation
 
-Improve language coverage, aliases, graph aggregation, evidence locations and then optional Praxi semantic grouping/question-to-query. Do not add paid model calls silently. No local-checkout adapter, incremental analysis, runtime/call-graph proof, database parsing, comparison, shared persistence or native-client integration yet.
+Read web LENS_HANDOFF.md for final publish/validation state. Finish any pending checks and push only approved origins:
+- https://github.com/Praximations/praxi-lens.git
+- https://github.com/Praximations/vorylen-web.git
+Git uses HTTPS/GCM; SSH public-key auth was unavailable. Vorylen Git pushes deploy existing Vercel project praximations-web. No separate Lens service.
+Node installed at C:/Users/ariwi/AppData/Local/nvm/v24.18.0; prepend it to PATH when npm is missing. On the current Windows sandbox this runtime needs an approved escalated exec.
+At every milestone update HANDOFF and run npm run check after core code changes. CHECKPOINT captures tested source digest, not a deployment promise. Do not rebuild the implemented foundation.
 
-JS/TS and package metadata are parsed; other files have structure only. Aliases/ambiguous relative paths are unresolved. require-reference is syntactic and may name a shadowed function. Secret-path exclusions are not a general secret scanner. View layouts are deterministic cards/graphs, not a full layout/performance/accessibility certification.
-
-No public model sharing. Imported evidence labels are assertions, not independent verification. Export downloads paths/evidence references but not raw source or tokens. Private analysis needs the user's fine-grained Contents-read token; GitHub App/OAuth integration remains future work.
-
-Existing web npm audit has 8 advisories, including critical Next.js 16.2.10 and pre-existing high dependency findings. Lens's dependency audit is clean. Schedule a tested framework/security update; npm reports Next 16.3.7 as its fix. Do not claim web audit is clean.
-
-## Cost and continuity
-
-No AI calls or per-analysis Vercel processing. Normal website hosting/session middleware and GitHub limits apply. Vercel Hobby is personal/non-commercial only. No plans/services were purchased. See docs/costs.md.
-
-At every milestone update HANDOFF and run npm run check; if interrupted, npm run checkpoint records validation as not rerun. CHECKPOINT records capture-time Git state and a source digest; its HEAD can precede the containing commit.
-
-Resume: Read this file, AGENTS.md, CHECKPOINT.md and web LENS_HANDOFF.md; verify actual Git/deployment status, finish publishing if pending, then continue the next product work above. Do not rebuild the existing foundation or present unfinished features as available.

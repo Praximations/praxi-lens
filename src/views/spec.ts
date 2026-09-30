@@ -15,6 +15,8 @@ export const viewSpecSchema = z.object({
   }).strict()),
   edges: z.array(z.object({
     id: idSchema, from: idSchema, to: idSchema, kind: z.string(), provenance: provenanceSchema,
+    /** Present on overview projections: exact supporting model relationships. */
+    relationshipIds: z.array(idSchema).min(1).optional(),
   }).strict()),
   sequence: z.array(idSchema),
   contextClaims: z.array(z.object({ id: idSchema, label: z.string(), provenance: provenanceSchema }).strict()),
