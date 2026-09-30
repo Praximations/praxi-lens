@@ -2,7 +2,7 @@
 
 Praxi's renderer-independent foundation for understanding, representing, querying and explaining complex systems. AI models are one supported system type alongside software, databases, agents, workflows and future extensions.
 
-This is the first **core foundation**, not a finished Lens application. The full original prompt is preserved in [docs/lens.md](docs/lens.md). Current state and continuation instructions are in [HANDOFF.md](HANDOFF.md).
+Lens 0.2 adds bounded GitHub repository analysis, rendered by Vorylen at `/lens`. This is an early preview. The original prompt is preserved in [docs/lens.md](docs/lens.md). Current state and continuation instructions are in [HANDOFF.md](HANDOFF.md).
 
 ```text
 praxi/
@@ -12,7 +12,7 @@ praxi/
     ├── src/
     │   ├── system-model/  # versioned contracts, evidence, integrity validation
     │   ├── analysis/      # adapter → validated model → diagnostics
-    │   ├── adapters/manifest/
+    │   ├── adapters/       # manifest, repository AST analysis, GitHub ingestion
     │   ├── interpretation/ # inferred semantic overlays
     │   ├── queries/       # hierarchy, neighbors, paths, search, groups, flows
     │   ├── views/         # renderer-independent ViewSpec generation
@@ -57,7 +57,18 @@ const callers = generateView(model, {
 const explanation = planExplanation(model, { kind: "flow", flowId: "flow:login" });
 ```
 
-Consumers must install/build this local package or a future released package before importing `@praxi/lens`; no sibling application has been wired to it yet.
+Vorylen installs an exact package artifact under its vendor directory. Clean GitHub/Vercel builds need no sibling checkout or registry credential. Core source stays here; refresh instructions are in the web repository's vendor/README.md.
+
+## GitHub analysis
+
+```ts
+import { analyzeGitHubRepository } from "@praxi/lens/github";
+const result = await analyzeGitHubRepository("https://github.com/expressjs/express");
+```
+
+Options include ref, token, signal and onProgress. The website runs this in a browser worker. Metadata/tree come from GitHub; public source comes from raw.githubusercontent.com at a pinned commit. Private source uses GitHub's authenticated blob API. Credentials go only to api.github.com; redirects are rejected. No source is executed, persisted or sent to AI. Limits: 1,200 files, 40 JS/TS/package source files, 100 KB/file and 1.5 MB source total. Coverage and unresolved references are explicit.
+
+`@praxi/lens/repository` accepts an already-collected snapshot. Babel parses import syntax separately from comments/strings. Relative paths use conservative resolution; aliases/ambiguous paths remain unresolved. CommonJS require-reference edges describe syntax, not proof of an unshadowed require or runtime call. Other languages get file structure only. Common generated/secret paths, symlinks and submodules are excluded; this is not a complete secret scanner.
 
 ## Model and view boundaries
 
@@ -74,8 +85,8 @@ Unknown extension namespaces round-trip with diagnostics. Register a versioned s
 - All analysis is in memory. Output is capped at 500 entities, but internal traversal is not a large-system performance guarantee.
 - Hierarchy views show actual selected relationships; cross-level aggregation is not implemented.
 - Manifest ingestion validates consistency and preserves declared provenance. It cannot establish that submitted facts are true.
-- No Git/local repository parser, live Praxi integration, persistence, HTTP service, runtime observation, or UI renderer yet.
+- GitHub analysis and Vorylen web rendering are implemented. Local checkout ingestion, live Praxi interpretation, persistence, runtime observation and native desktop/mobile integration remain unfinished.
 - Visibility defaults to private. Public/unlisted flags do not implement authorization or redact evidence.
 - Lens does not own rendering (Vorylen), shared information storage (Praxium Core), or scheduling (Vireon).
 
-The next milestone is the phase-0 Vorylen renderer against these hand-authored fixtures, followed by deterministic repository extraction. See HANDOFF.md for acceptance criteria.
+See HANDOFF.md for next steps and docs/costs.md for operating costs.

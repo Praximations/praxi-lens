@@ -32,6 +32,6 @@ Do not wait for a token limit warning; agents cannot reliably predict the remain
 
 Schema 0.1 is experimental. Validate external input with parseSystemModel/analyze; raw schema validation alone does not check graph integrity. Preserve IDs and provenance. Keep inferred semantic groups separate from observed containment. A dependency path is not a runtime execution trace. Manifests contain assertions, not automatically verified facts.
 
-Visibility is metadata, not access control or redaction. Do not expose models publicly until an application authorization and evidence-redaction boundary exists. No public publishing, live-source ingestion or credentials are implemented here yet.
+Visibility is metadata, not access control or redaction. Do not publish models without authorization and evidence redaction. GitHub ingestion now accepts an optional read-only token; keep it in memory, send it only to api.github.com, reject redirects, and never include it or raw source in model output. The website processes models in the user's browser without shared storage.
 
 Follow the prompt's phase order: prove the renderer with hand-authored data, then repository extraction, then Praxi interpretation and natural-language queries. Do not invent dozens of future packages or claim current metadata validators are full system analyzers.
