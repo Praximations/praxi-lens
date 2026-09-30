@@ -6,7 +6,7 @@ Updated 2026-09-29. Read AGENTS.md and CHECKPOINT.md. The original 52-section pr
 
 User asked for Vorylen rendering and real GitHub analysis through the website today, with low running costs. User supplied Praximations/praxi-lens as the remote. SSH is unavailable on this machine, so equivalent HTTPS origin is configured.
 
-Core 0.2 and web/GitHub preview are implemented. Publishing verification is pending at this capture; update this file when production is confirmed.
+Core 0.2 and web/GitHub preview are implemented, pushed and live at https://www.praximations.com/lens. Lens implementation commit: d98c037. Web implementation commit: 2c5770c. Both use main. Subsequent handoff-only commits do not change the tested implementation.
 
 ## Implemented
 
@@ -23,15 +23,14 @@ Core 0.2 and web/GitHub preview are implemented. Publishing verification is pend
 
 - Lens npm run check: build and 21 tests passed, including AST syntax, unsafe paths, root-escape regression, URL allowlisting, mocked public/private transport, token confinement, rate-limit errors, graph integrity and interpretation/view behavior.
 - Live Node adapter on expressjs/express: 213 files, 40 source files, 165 references, commit 7ef98448f8b38099ab1ded55e458538ad47a51e7. Reported 40/142 source coverage and 32 unresolved imports.
-- Web production build and focused ESLint passed. Typecheck after the latest package refresh needs its command result checked.
-- Chrome UI: teaching-example focus/semantic zoom, dependency view and real Express analysis through the worker passed. Desktop screenshot reviewed. Real private credentials and every mobile/UI control are not yet browser-tested.
+- Web production build, final typecheck and focused ESLint passed.
+- Chrome UI: teaching-example focus/semantic zoom, dependency view, search for lib/express.js, evidence links and real Express analysis through the worker passed. Desktop screenshot reviewed. Real private credentials and every mobile/UI control are not yet browser-tested.
+- Vercel deployment dpl_BZ2cod4oboi8cSh7WbnQG3wB1v58 is READY, built from web commit 2c5770c. Production /lens returned HTTP 200 with the GitHub CSP permissions.
+- On the production website, Praximations/praxi-lens analyzed successfully: 38 files, 26/26 eligible source files read, package-reference grouping visible. Its GitHub repository is public, so no token is needed. The live tab was left open with this result.
 
-## Publishing tasks remaining at this capture
+## Publishing state
 
-1. Check final typecheck and remaining browser interactions.
-2. Commit/push core to Praximations/praxi-lens and web to Praximations/vorylen-web, preserving independent Git boundaries.
-3. Verify web Git deployment READY and https://www.praximations.com/lens, including GitHub worker under production CSP.
-4. Record final commits/results in this file and web LENS_HANDOFF.md.
+Completed for this milestone. Core and web source are pushed to their approved repositories. Existing Vercel project praximations-web deploys the web repository automatically. No separate Lens Vercel service is needed. Web LENS_HANDOFF links back here; this is the authoritative final verification record.
 
 ## Next product work and limits
 
