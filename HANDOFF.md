@@ -4,7 +4,7 @@ Updated 2026-09-30. Read AGENTS.md and CHECKPOINT.md first. Full original vision
 
 ## Current milestone
 
-The user asked for a simpler, more powerful experience inspired by GitDiagram and similar tools, integrated into Praxi Dev. Core 0.3.0 and the diagram-first web redesign are implemented. Publishing this milestone is pending; the previous 0.2 implementation is already live at https://www.praximations.com/lens.
+The user asked for a simpler, more powerful experience inspired by GitDiagram and similar tools, integrated into Praxi Dev. Core 0.3.0 and the diagram-first web redesign are implemented, pushed and live at https://www.praximations.com/lens and https://www.praximations.com/dev/lens.
 
 ## Implementation and boundaries
 
@@ -24,10 +24,18 @@ The user asked for a simpler, more powerful experience inspired by GitDiagram an
 ## Validation
 
 Core npm run check: build + 23 tests passed (includes overview evidence/limits/direction/grouping, existing graph integrity, AST extraction, public/private token confinement, unsafe URLs and paths, rate-limit handling).
-Web production build + focused ESLint passed before final UI refinements; final checks and deployment status are recorded in web LENS_HANDOFF.md.
+Final web production build, focused ESLint and TypeScript check all passed. Core code was unchanged after its 23-test run; only handoff documentation changed afterward.
 Chrome local checks: sample folder drill-down, summarized-edge original reference inspection, directed path Web client -> Database (4 nodes/3 edges), real Praximations/praxi-lens analysis (38 files/26 source files at 6911fc5), search by full path, used-by query, 390px responsive layout, and Dev shell rendering via development-only harness.
-Real /dev/lens redirects unauthenticated users to login. Authenticated project/branch prefilling is implemented/typechecked but has not been exercised with a live signed-in project. Private tokens have mocked transport tests, not live credential tests. Browser viewport override reset after checks.
+Local /dev/lens redirects unauthenticated users to login. Production /dev/lens was verified in the existing signed-in session: real Dev project selector, internal Project tabs with Praxi Lens, and the embedded analyzer all loaded in engine mode. That project had no linked repo, so repository/branch prefilling is implemented/typechecked but not live-tested. Private tokens have mocked transport tests, not live credential tests. Browser viewport override reset after checks.
 Development harness /dev-preview?view=lens follows the existing production Vercel 404 guard.
+
+## Final publication record
+
+- Core implementation 70143f29248a6259fc23bbd4e5914f151385eab2 pushed to main; web implementation 8a9726692b610c933f832d1c8103027d19f299f7 pushed to main. Both worktrees were clean after these implementation commits.
+- Vercel production deployment dpl_4mjFyKtXngum9hAxZTP7eYtd5jpT is READY, built from web 8a97266. URL: praximations-opq6xq893-ari-4150s-projects.vercel.app, aliased to www.praximations.com.
+- The redesigned public production page analyzed Praximations/praxi-lens at 70143f2: 39 files, 27 source files read, 17 overview nodes and 7 summarized connections. Production /dev/lens rendered correctly in the signed-in Dev shell.
+- This final record supersedes the pre-publish status in web LENS_HANDOFF.md. It lives in core to avoid a documentation-only web redeployment. This handoff-only commit does not change the tested package.
+- An initial push did not execute because automatic approval review hit a usage limit. The user said continue; subsequent authorized pushes succeeded. No unresolved publishing blocker remains.
 
 ## Limits / next work
 
