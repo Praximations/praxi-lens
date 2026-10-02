@@ -6,7 +6,7 @@ Updated 2026-10-02. Read AGENTS.md and CHECKPOINT.md first. Full original vision
 
 User direction (2026-10-02): Lens must let an average person look at any software project, from tiny to enormous ("all of Claude"), and understand what is going on. Software first. Physical/hardware systems are explicitly deferred: do not start them until the user asks.
 
-Work is on branch `claude/lens-program-visualization-d5dodf` in praxi-lens and vorylen-web (pushed; not merged to main, so not deployed to production). praxi-api was not changed.
+Published 2026-10-02 at the user's request ("push to main"): branch `claude/lens-program-visualization-d5dodf` was fast-forwarded to main in both repos (main had not moved). praxi-lens main = 81e4448 (CI "Validate Lens" run 37064644522: success). vorylen-web main = 687ed3f; Vercel status "Deployment has completed" for project praximations-web (deployment HVBWPQx9eRaEj65ufKBH5NsNT6CE). The live pages (https://www.praximations.com/lens, /dev/lens) were not opened after deploy because this cloud sandbox's proxy blocks praximations.com; the next session with web access should verify them on a large public repository. praxi-api was not changed.
 
 ### Completed behavior (core @praxi/lens 0.4.0)
 - Scale/performance: `validModel` caches validation per object (parseSystemModel outputs are pre-registered); `indexModel` builds parent/children/adjacency/leaf/activity maps once; queries and views use Sets/Maps. `withSemanticGroups` validates overlays incrementally. 30k-file model: overlay ~0.3 s, views 0.03-0.1 s after a one-time ~1 s validation (tests/understanding.test.mjs has a 30k scale test).
@@ -31,7 +31,7 @@ Core `npm run check`: build + 38 tests pass (15 new: languages, understanding, a
 Not validated: production deployment, private-repo token flow against real GitHub, other-org repositories (sandbox proxy only allowed Praximations repos), real 50k+ file repositories over the network.
 
 ### Next concrete actions
-1. User review of the branch; if approved, merge both branches to main (web main deploys praximations-web on Vercel), then verify https://www.praximations.com/lens on a large public repo.
+1. Open https://www.praximations.com/lens in a real browser and analyze a large public repository (and /dev/lens signed in); record the result here. Merge and deploy are done.
 2. Move query/view generation into the worker (or a second worker) so 50k+ file models never validate on the main thread.
 3. Optional AI narrative through Praxi API (provider behind API boundary, user-approved cost): use describeSystem/describeEntity facts + evidence IDs as grounding; keep it labeled INFERRED.
 4. Function-level drill-down (exports already recorded) and declared flows from route handlers.
@@ -88,6 +88,6 @@ Node installed at C:/Users/ariwi/AppData/Local/nvm/v24.18.0; prepend it to PATH 
 At every milestone update HANDOFF and run npm run check after core code changes. CHECKPOINT captures tested source digest, not a deployment promise. Do not rebuild the implemented foundation.
 
 ### Next-agent prompt (2026-10-02)
-"Read AGENTS.md, HANDOFF.md (0.4 milestone) and CHECKPOINT.md in praxi-lens, then vorylen-web LENS_HANDOFF.md. Both repos have branch claude/lens-program-visualization-d5dodf with core 0.4.0 and the Big picture UI; confirm with git whether it was merged. Run `npm ci && npm run check` in praxi-lens (expect 38 passing tests) and `npm ci && npx tsc --noEmit` in vorylen-web. Keep the vendored tgz and lockfile in sync (vendor/README.md). Continue with HANDOFF 'Next concrete actions' in order; do not start hardware/physical systems unless the user asks."
+"Read AGENTS.md, HANDOFF.md (0.4 milestone) and CHECKPOINT.md in praxi-lens, then vorylen-web LENS_HANDOFF.md. Core 0.4.0 and the Big picture UI are on main in both repos (deployed 2026-10-02; live visual check still pending). Run `npm ci && npm run check` in praxi-lens (expect 38 passing tests) and `npm ci && npx tsc --noEmit` in vorylen-web. Keep the vendored tgz and lockfile in sync (vendor/README.md). Continue with HANDOFF 'Next concrete actions' in order; do not start hardware/physical systems unless the user asks."
 Cloud sessions: Node 22 is on PATH; GitHub access goes through a proxy that only allows this session's repositories; Playwright must use executablePath /opt/pw-browsers/chromium; the web dev server needs placeholder NEXT_PUBLIC_SUPABASE_URL/ANON_KEY values (never commit them).
 
