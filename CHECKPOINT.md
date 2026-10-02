@@ -1,12 +1,12 @@
 # Generated checkpoint
 
-Updated: 2026-10-02T18:07:08.236Z
+Updated: 2026-10-02T18:27:00.832Z
 
 Read HANDOFF.md for decisions, limitations, and the next task. This file records actual local state; it does not imply a deployment or push.
 
 - Branch: claude/lens-program-visualization-d5dodf
-- HEAD at capture time: 4cc8a5129a0f5a2075eee1d1bfaa265629635543
-- Source SHA-256: 67b8a25bf147040e8e3b851e1ba4fb61e39cb9c01db2a18c1889c008367e75b1
+- HEAD at capture time: d26deefbccb1ed8657cb5fe7a883523deeb920bb
+- Source SHA-256: b692f819999ffda2c51364c3b0359e83ccdbbd54fb1d50b971695b0832990b4c
 - Node: v22.22.0
 
 ## Validation from this checkpoint
@@ -19,17 +19,7 @@ The digest covers src, tests, examples, scripts, package manifests, and tsconfig
 ## Worktree at capture time
 
 ```text
-M package-lock.json
- M package.json
- M src/adapters/repository/languages.ts
- M src/explanation/planner.ts
- M src/index.ts
- M src/queries/overview.ts
- M src/system-model/model-index.ts
- M src/system-model/validate.ts
-?? src/explanation/describe.ts
-?? src/explanation/vocabulary.ts
-?? src/extensions/software/languages.ts
-?? src/interpretation/software-roles.ts
-?? tests/understanding.test.mjs
+M HANDOFF.md
+ M README.md
+ M package-lock.json
 ```

@@ -2,7 +2,7 @@
 
 Praxi's renderer-independent foundation for understanding, representing, querying and explaining complex systems. AI models are one supported system type alongside software, databases, agents, workflows and future extensions.
 
-Lens 0.2 adds bounded GitHub repository analysis, rendered by Vorylen at `/lens`. This is an early preview. The original prompt is preserved in [docs/lens.md](docs/lens.md). Current state and continuation instructions are in [HANDOFF.md](HANDOFF.md).
+Lens 0.4 explains software repositories of any size to non-experts: multi-language reference extraction, a plain-language role overlay, semantic-zoom maps, system and part descriptions and a guided tour. Vorylen renders it at `/lens`. This is an early preview. The original prompt is preserved in [docs/lens.md](docs/lens.md). Current state and continuation instructions are in [HANDOFF.md](HANDOFF.md).
 
 ```text
 praxi/
@@ -66,9 +66,20 @@ import { analyzeGitHubRepository } from "@praxi/lens/github";
 const result = await analyzeGitHubRepository("https://github.com/expressjs/express");
 ```
 
-Options include ref, token, signal and onProgress. The website runs this in a browser worker. Metadata/tree come from GitHub; public source comes from raw.githubusercontent.com at a pinned commit. Private source uses GitHub's authenticated blob API. Credentials go only to api.github.com; redirects are rejected. No source is executed, persisted or sent to AI. Limits: 1,200 files, 40 JS/TS/package source files, 100 KB/file and 1.5 MB source total. Coverage and unresolved references are explicit.
+Options include ref, token, signal, onProgress and budget. The website runs this in a browser worker. Metadata/tree come from GitHub; public source comes from raw.githubusercontent.com at a pinned commit. Private source uses GitHub's authenticated blob API. Credentials go only to api.github.com; redirects are rejected. No source is executed, persisted or sent to AI.
 
-`@praxi/lens/repository` accepts an already-collected snapshot. Babel parses import syntax separately from comments/strings. Relative paths use conservative resolution; aliases/ambiguous paths remain unresolved. CommonJS require-reference edges describe syntax, not proof of an unshadowed require or runtime call. Other languages get file structure only. Common generated/secret paths, symlinks and submodules are excluded; this is not a complete secret scanner.
+Scale: structure is mapped for up to 50,000 files by default (hard cap 60,000). Truncated GitHub trees are completed one top-level folder at a time. Source reading defaults to 900 files / 9 MB (hard caps 3,000 files / 24 MB, 250 KB per file), chosen by `selectSources`: manifests first, then a round-robin across top-level areas preferring entry points and shallow files, tests and generated code last. A soft deadline (45 s default) returns an honest partial map instead of failing. Coverage, omissions and unresolved references are reported.
+
+`@praxi/lens/repository` accepts an already-collected snapshot. References are extracted as data, after comments (and where relevant strings) are removed: JavaScript/TypeScript (Babel, including Vue/Svelte/Astro script blocks, tsconfig `paths`/`baseUrl`/`extends` and npm workspaces), Python, Go (go.mod modules), Rust (`mod`/`use`, workspace crates), Java/Kotlin/Scala/Groovy, C/C++/Objective-C includes, Ruby, PHP and Dart. Manifests: package.json, requirements*.txt, pyproject.toml, setup.py, go.mod, Cargo.toml, Gemfile, composer.json, pubspec.yaml. Resolution follows each ecosystem's documented lookup order; anything else stays unresolved. Standard-library imports are counted, not drawn. CommonJS require-reference edges describe syntax, not proof of a runtime call. Other languages (C#, Swift, ...) get file structure only. Common generated/secret paths, symlinks and submodules are excluded; code files with secret-like names stay visible as structure but are never read. This is not a complete secret scanner.
+
+## Understanding for non-experts (0.4)
+
+- `interpretSoftwareRoles(model)` adds an INFERRED `role` overlay: every file and outside package belongs to exactly one plain-language role (user interface, command line, server & API, AI & models, core logic, integrations, data & storage, shared helpers, outside packages, tests, docs, examples, tooling, configuration, deployment, media, other). Signals are folder names, file names/types and the outside libraries each file uses; `classifySoftwareComponent` returns the reasons and confidence. Observed components, relationships and IDs are unchanged and repeated calls replace the overlay.
+- `generateView(model, { kind: "groups", groupKind: "role" })` is the architecture ("big picture") view: one node per role with description and layer hint, and references between roles with every supporting relationship ID. It is never more certain than the overlay.
+- `generateView(model, { kind: "overview", rootId, target: 24, combineKinds: true })` is semantic zoom: the busiest places open first until about `target` parts are visible, single-child folder chains read as one place (`src/main/java`), unconnected files and overflow become bundles with exact `memberIds`, and nodes carry size, context and dominant role.
+- `describeSystem(model)` and `describeEntity(model, id)` produce plain-language summaries: what it is, languages, roles and where they live, how parts rely on each other, where to start reading, most-used files, and per part what it relies on, what relies on it, what it provides and why it has its role. Owners' descriptions and README text are quoted as their claims.
+- `planTour(model)` is a guided tour: the whole system, each major part with what it relies on, then where to start reading. Role scenes keep INFERRED provenance.
+- Validated models are cached by object identity (`validModel`, `indexModel`), so treat them as immutable. On a 30,000-file model, overlays take ~0.3 s and views ~0.05-0.1 s after a one-time ~1 s validation.
 
 ## Model and view boundaries
 
@@ -82,8 +93,9 @@ Unknown extension namespaces round-trip with diagnostics. Register a versioned s
 
 ## Current limits
 
-- All analysis is in memory. Output is capped at 500 entities, but internal traversal is not a large-system performance guarantee.
-- Hierarchy views show actual selected relationships; cross-level aggregation is not implemented.
+- All analysis is in memory. Views are capped at 500 entities; overview bundles summarize the rest. Models beyond ~60,000 files are partial.
+- Hierarchy views show actual selected relationships; overview and groups views aggregate across levels.
+- Roles come from naming conventions and imports, so unusual layouts can be misread; the reasons are always shown. No AI narrative or natural-language questions yet.
 - Manifest ingestion validates consistency and preserves declared provenance. It cannot establish that submitted facts are true.
 - GitHub analysis and Vorylen web rendering are implemented. Local checkout ingestion, live Praxi interpretation, persistence, runtime observation and native desktop/mobile integration remain unfinished.
 - Visibility defaults to private. Public/unlisted flags do not implement authorization or redact evidence.

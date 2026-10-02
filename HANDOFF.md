@@ -1,15 +1,44 @@
 ﻿# Praxi Lens handoff
 
-Updated 2026-09-30. Read AGENTS.md and CHECKPOINT.md first. Full original vision: docs/lens.md (unchanged). Product names: Vorylen and Vireon.
+Updated 2026-10-02. Read AGENTS.md and CHECKPOINT.md first. Full original vision: docs/lens.md (unchanged). Product names: Vorylen and Vireon.
 
-## In progress (2026-10-02, branch claude/lens-program-visualization-d5dodf)
+## Current milestone: 0.4 "understand any software project" (2026-10-02)
 
-User goal: Lens must make any software project, from tiny to enormous (e.g. "all of Claude"), visually understandable to an average person. Software first; physical/hardware systems explicitly deferred.
-Done so far on this branch (core 0.4.0, unpublished): cached ModelIndex + Set/Map queries; semantic-zoom overview (`target` auto-depth, single-child folder chains collapsed, quiet files and overflow bundled with exact memberIds, node size/context/role); `groups` architecture projection; ranked search; multi-language references (Python, Go, Rust, Java/Kotlin/Scala, C/C++/ObjC, Ruby, PHP, Dart, Vue/Svelte/Astro) + manifests (requirements/pyproject/go.mod/Cargo/Gemfile/composer/pubspec) + tsconfig paths/extends + npm workspaces; standard-library imports counted, not drawn; GitHub reader budget 900 files/9 MB (hard caps 3,000/24 MB, 60k structure files), balanced area sampling, soft read deadline, truncated-tree recovery per top-level folder, repo description/topics/README summary. Credential-named code files stay as structure but are never read.
-Measured: vorylen-web 40 -> 575/575 source files, 94 -> 2,048 references; praxi-api 240 -> 1,936 references.
-Next: deterministic plain-language roles overlay + describe/tour APIs, then web Big-picture UI. See bottom of this file when complete.
+User direction (2026-10-02): Lens must let an average person look at any software project, from tiny to enormous ("all of Claude"), and understand what is going on. Software first. Physical/hardware systems are explicitly deferred: do not start them until the user asks.
 
-## Current milestone
+Work is on branch `claude/lens-program-visualization-d5dodf` in praxi-lens and vorylen-web (pushed; not merged to main, so not deployed to production). praxi-api was not changed.
+
+### Completed behavior (core @praxi/lens 0.4.0)
+- Scale/performance: `validModel` caches validation per object (parseSystemModel outputs are pre-registered); `indexModel` builds parent/children/adjacency/leaf/activity maps once; queries and views use Sets/Maps. `withSemanticGroups` validates overlays incrementally. 30k-file model: overlay ~0.3 s, views 0.03-0.1 s after a one-time ~1 s validation (tests/understanding.test.mjs has a 30k scale test).
+- Semantic zoom: overview `target` opens the busiest places first (partially, with an overflow bundle, when a place cannot open whole); single-child folder chains collapse (`src/main/java`); 3+ unconnected leaves become a "N other files" bundle; nodes carry size, context, dominant role; bundles carry exact `memberIds`; `combineKinds` merges parallel edge kinds (`kindCounts`). Ranked search (name > path > kind, shallow/active first).
+- `groups` query/`architecture` view: one node per overlay group (role) with description/layer; edges keep every supporting relationship ID; provenance never above the overlay (INFERRED).
+- Multi-language extraction (src/adapters/repository/languages.ts, manifests.ts): JS/TS via Babel (+Vue/Svelte/Astro scripts, tsconfig paths/baseUrl/extends, npm workspaces resolve to source), Python (relative/absolute/package roots, docstrings ignored), Go (go.mod modules -> folders), Rust (mod/use/crate/super/workspace crates), JVM (FQN -> file suffix, wildcard -> folder), C/C++/ObjC includes, Ruby, PHP, Dart; manifests package.json, requirements, pyproject, setup.py, go.mod, Cargo.toml, Gemfile, composer.json, pubspec.yaml. Comments (and strings where imports are not strings) are stripped first. Standard-library imports are counted (`standardLibraryImports`), not drawn. JS resolution now follows TypeScript/bundler order (exact, extensions, index) instead of rejecting ambiguity. Language tables live in src/extensions/software/languages.ts (no Babel in the main entry).
+- GitHub reader: defaults 50k structure files, 900 source files / 9 MB, 45 s soft read deadline (partial map + diagnostic), 120 s hard timeout, 12 parallel raw reads (6 for private API blobs); hard caps 60k / 3,000 / 24 MB / 250 KB per file. `selectSources` = manifests, then round-robin over top-level areas (entry points, shallow first), tests/generated last. Truncated trees are re-listed per top-level folder (max 40 extra API calls). Owners' description/topics + README opening paragraph (max 400 chars, code/markup/badges stripped) recorded with their own evidence. Code files with secret-like names (credentials.ts) stay as structure but are never read; .env/keys/secret data files remain excluded.
+- Plain-language understanding: `interpretSoftwareRoles` (INFERRED role overlay, one role per leaf, reasons via `classifySoftwareComponent`), `describeSystem`, `describeEntity`, `describeConnection`, `planTour`, vocabulary helpers (`kindLabel`, `relationshipVerb`, `lowerName`, ...).
+- Measured on real repos (same commits as before): vorylen-web 40 -> 575/575 source files read, 94 -> 2,048 references, 1 unresolved; praxi-api 240 -> 1,936 references (unresolved drop from 27 to 3 after the credentials.ts fix; remaining 3 import a sibling checkout).
+
+### Completed behavior (Vorylen web, branch only)
+Big picture tab (roles in lanes: What people use -> Handles requests -> Main logic -> Data & services -> Outside packages, supporting files row), Map with Simple/Normal/Detailed zoom (12/24/48), role colors + legend filter, "What is this?" summary, plain-language inspectors (part, role, bundle, connection) with "why" reasons, guided tour (planTour), deeper-scan option, stacked phone layout, larger JSON import limits (40 MB / 80k parts). Details in vorylen-web LENS_HANDOFF.md.
+
+### Decisions
+- Roles are deterministic heuristics (names, file types, imported libraries), stored as INFERRED semantic groups with reasons/confidence; observed facts untouched. No AI provider calls (AGENTS.md: no silent paid providers; provider execution belongs behind Praxi API).
+- Role colors: 7 validated categorical slots (dataviz palette, light+dark validated); outside packages/supporting roles neutral; names always shown so color is never the only cue. Parts under 35% dominant share render as "Mixed roles".
+- Lane layouts hide within-lane and supporting-file edges until a part is pointed at (count shown); evidence is unchanged.
+- README summary is author documentation (bounded), quoted as the owners' claim; no source code enters the model.
+
+### Validation (this milestone)
+Core `npm run check`: build + 38 tests pass (15 new: languages, understanding, adapter scale/deadline/truncation/credential paths; the previous 23 unchanged). Web: `tsc --noEmit`, ESLint on Lens files, `next build --webpack` all pass. Playwright (local dev server with placeholder Supabase env, browser GitHub traffic relayed through the sandbox): live in-browser analysis of Praximations/praxi-api (481/481 sources, 28 s) and praxi-lens (2 s), guided tour, Map, inspector, 390 px phone layout (no horizontal overflow), 28k-file synthetic import (1.4-1.7 s to first view, ~0.2 s per interaction). Only console error: pre-existing missing /praximations/Vorylen-Logo.png.
+Not validated: production deployment, private-repo token flow against real GitHub, other-org repositories (sandbox proxy only allowed Praximations repos), real 50k+ file repositories over the network.
+
+### Next concrete actions
+1. User review of the branch; if approved, merge both branches to main (web main deploys praximations-web on Vercel), then verify https://www.praximations.com/lens on a large public repo.
+2. Move query/view generation into the worker (or a second worker) so 50k+ file models never validate on the main thread.
+3. Optional AI narrative through Praxi API (provider behind API boundary, user-approved cost): use describeSystem/describeEntity facts + evidence IDs as grounding; keep it labeled INFERRED.
+4. Function-level drill-down (exports already recorded) and declared flows from route handlers.
+5. Hardware/physical systems only when the user asks.
+
+## Previous milestone (0.3, 2026-09-30)
+
 
 The user asked for a simpler, more powerful experience inspired by GitDiagram and similar tools, integrated into Praxi Dev. Core 0.3.0 and the diagram-first web redesign are implemented, pushed and live at https://www.praximations.com/lens and https://www.praximations.com/dev/lens.
 
@@ -57,4 +86,8 @@ Read web LENS_HANDOFF.md for final publish/validation state. Finish any pending 
 Git uses HTTPS/GCM; SSH public-key auth was unavailable. Vorylen Git pushes deploy existing Vercel project praximations-web. No separate Lens service.
 Node installed at C:/Users/ariwi/AppData/Local/nvm/v24.18.0; prepend it to PATH when npm is missing. On the current Windows sandbox this runtime needs an approved escalated exec.
 At every milestone update HANDOFF and run npm run check after core code changes. CHECKPOINT captures tested source digest, not a deployment promise. Do not rebuild the implemented foundation.
+
+### Next-agent prompt (2026-10-02)
+"Read AGENTS.md, HANDOFF.md (0.4 milestone) and CHECKPOINT.md in praxi-lens, then vorylen-web LENS_HANDOFF.md. Both repos have branch claude/lens-program-visualization-d5dodf with core 0.4.0 and the Big picture UI; confirm with git whether it was merged. Run `npm ci && npm run check` in praxi-lens (expect 38 passing tests) and `npm ci && npx tsc --noEmit` in vorylen-web. Keep the vendored tgz and lockfile in sync (vendor/README.md). Continue with HANDOFF 'Next concrete actions' in order; do not start hardware/physical systems unless the user asks."
+Cloud sessions: Node 22 is on PATH; GitHub access goes through a proxy that only allows this session's repositories; Playwright must use executablePath /opt/pw-browsers/chromium; the web dev server needs placeholder NEXT_PUBLIC_SUPABASE_URL/ANON_KEY values (never commit them).
 
