@@ -46,6 +46,12 @@ export const evidenceSchema = z.object({
 }).strict();
 export const semanticGroupSchema = z.object({
   id: idSchema, name: z.string().min(1),
+  /** Optional overlay family, such as "role". Groups of one kind can be projected together. */
+  kind: z.string().min(1).max(80).optional(),
+  /** Plain-language meaning of the group for people unfamiliar with the system. */
+  description: z.string().min(1).max(500).optional(),
+  /** Presentation hint: lower layers sit closer to the people or systems that use this one. */
+  layer: z.number().int().min(0).max(20).optional(),
   memberIds: z.array(idSchema).min(1),
   provenance: provenanceSchema,
 }).strict();
@@ -65,4 +71,7 @@ export type Provenance = z.infer<typeof provenanceSchema>;
 export type Entity = z.infer<typeof entitySchema>;
 export type Component = z.infer<typeof componentSchema>;
 export type Relationship = z.infer<typeof relationshipSchema>;
+export type Flow = z.infer<typeof flowSchema>;
+export type Evidence = z.infer<typeof evidenceSchema>;
+export type SemanticGroup = z.infer<typeof semanticGroupSchema>;
 export type SystemModel = z.infer<typeof systemModelSchema>;

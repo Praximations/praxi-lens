@@ -93,3 +93,70 @@ test('private repository tokens stay on GitHub API; source and credentials are n
 test('GitHub rate limits are explicit failures, not fabricated empty models', async () => {
   await assert.rejects(() => analyzeGitHubRepository('owner/repo', { fetch: async () => new Response('', { status: 429 }) }), /rate limit/);
 });
+
+test('code files with credential-like names stay visible as structure but are never read', () => {
+  const result = analyzeRepositorySnapshot({ ...snapshot, files: [
+    { path: 'src/auth.ts', content: "import { load } from './credentials';" },
+    { path: 'src/credentials.ts', content: 'export const SECRET = "never-read-this";' },
+    { path: 'secrets/keys.json', content: '{"k":"never-include-json"}' },
+  ] });
+  assert.ok(result.model.relationships.some(r => r.from === 'file:src/auth.ts' && r.to === 'file:src/credentials.ts'));
+  assert.equal(result.stats.sourceFiles, 1);
+  const text = JSON.stringify(result);
+  assert.equal(text.includes('never-read-this'), false);
+  assert.equal(text.includes('keys.json'), false);
+});
+
+test('source sampling covers every area before reading deeper into large ones', async () => {
+  const { selectSources } = await import('../dist/adapters/github/index.js');
+  const entries = [
+    ...Array.from({ length: 50 }, (_, i) => ({ path: `big/area/file${String(i).padStart(2, '0')}.ts`, size: 100 })),
+    { path: 'small/index.ts', size: 100 }, { path: 'other/main.py', size: 100 },
+    ...Array.from({ length: 5 }, (_, i) => ({ path: `tests/case${i}.test.ts`, size: 100 })),
+    { path: 'package.json', size: 50 }, { path: 'big/huge.ts', size: 10_000_000 },
+  ];
+  const chosen = selectSources(entries, 8, 100_000);
+  assert.equal(chosen.length, 8);
+  assert.equal(chosen[0], 'package.json');
+  for (const path of ['small/index.ts', 'other/main.py']) assert.ok(chosen.includes(path), path);
+  assert.equal(chosen.some(p => p.startsWith('tests/')), false, 'tests wait until main code is covered');
+  assert.equal(chosen.includes('big/huge.ts'), false);
+});
+
+function largeRepositoryMock({ truncated = true } = {}) {
+  const sha = 'b'.repeat(40);
+  const requests = [];
+  const fetch = async (url) => {
+    requests.push(url);
+    if (url === 'https://api.github.com/repos/owner/repo') return Response.json({ default_branch: 'main', private: false, description: 'Large test repository', topics: ['demo'] });
+    if (url.endsWith('/commits/main')) return Response.json({ sha, commit: { tree: { sha } } });
+    if (url.endsWith(`/git/trees/${sha}?recursive=1`)) return Response.json({ truncated, tree: [{ path: 'a/one.ts', type: 'blob', mode: '100644', sha, size: 20 }] });
+    if (url.endsWith(`/git/trees/${sha}`)) return Response.json({ truncated: false, tree: [
+      { path: 'README.md', type: 'blob', mode: '100644', sha, size: 120 },
+      { path: 'a', type: 'tree', mode: '040000', sha: 'a'.repeat(40) }, { path: 'b', type: 'tree', mode: '040000', sha: 'c'.repeat(40) }] });
+    if (url.endsWith(`/git/trees/${'a'.repeat(40)}?recursive=1`)) return Response.json({ truncated: false, tree: [{ path: 'one.ts', type: 'blob', mode: '100644', sha, size: 30 }] });
+    if (url.endsWith(`/git/trees/${'c'.repeat(40)}?recursive=1`)) return Response.json({ truncated: false, tree: [{ path: 'two.ts', type: 'blob', mode: '100644', sha, size: 30 }] });
+    if (url.endsWith('/README.md')) return new Response('# Big\n\nThis repository is a deliberately large example used to test structure recovery.\n');
+    if (url.endsWith('/a/one.ts')) return new Response("import '../b/two';");
+    if (url.startsWith('https://raw.githubusercontent.com/')) return new Response('export default 1;');
+    throw new Error('Unexpected request ' + url);
+  };
+  return { fetch, requests };
+}
+test('truncated GitHub trees are completed folder by folder instead of silently dropping areas', async () => {
+  const mock = largeRepositoryMock();
+  const result = await analyzeGitHubRepository('owner/repo', { fetch: mock.fetch });
+  assert.deepEqual(result.model.components.filter(c => c.kind === 'file').map(c => c.id).sort(), ['file:README.md', 'file:a/one.ts', 'file:b/two.ts']);
+  assert.ok(result.model.relationships.some(r => r.from === 'file:a/one.ts' && r.to === 'file:b/two.ts'));
+  assert.equal(result.stats.treeComplete, true);
+  const data = result.model.system.extensions['praxi.software'].data;
+  assert.equal(data.description, 'Large test repository');
+  assert.match(data.summary, /deliberately large example/);
+});
+test('a reading deadline returns an honest partial map rather than failing', async () => {
+  const mock = largeRepositoryMock({ truncated: false });
+  const result = await analyzeGitHubRepository('owner/repo', { fetch: mock.fetch, budget: { readDeadlineMs: -1 } });
+  assert.equal(result.stats.sourceFiles, 0);
+  assert.ok(result.diagnostics.some(d => d.startsWith('Stopped reading')));
+  assert.equal(mock.requests.some(u => u.startsWith('https://raw.githubusercontent.com/')), false);
+});

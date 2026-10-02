@@ -2,6 +2,13 @@
 
 Updated 2026-09-30. Read AGENTS.md and CHECKPOINT.md first. Full original vision: docs/lens.md (unchanged). Product names: Vorylen and Vireon.
 
+## In progress (2026-10-02, branch claude/lens-program-visualization-d5dodf)
+
+User goal: Lens must make any software project, from tiny to enormous (e.g. "all of Claude"), visually understandable to an average person. Software first; physical/hardware systems explicitly deferred.
+Done so far on this branch (core 0.4.0, unpublished): cached ModelIndex + Set/Map queries; semantic-zoom overview (`target` auto-depth, single-child folder chains collapsed, quiet files and overflow bundled with exact memberIds, node size/context/role); `groups` architecture projection; ranked search; multi-language references (Python, Go, Rust, Java/Kotlin/Scala, C/C++/ObjC, Ruby, PHP, Dart, Vue/Svelte/Astro) + manifests (requirements/pyproject/go.mod/Cargo/Gemfile/composer/pubspec) + tsconfig paths/extends + npm workspaces; standard-library imports counted, not drawn; GitHub reader budget 900 files/9 MB (hard caps 3,000/24 MB, 60k structure files), balanced area sampling, soft read deadline, truncated-tree recovery per top-level folder, repo description/topics/README summary. Credential-named code files stay as structure but are never read.
+Measured: vorylen-web 40 -> 575/575 source files, 94 -> 2,048 references; praxi-api 240 -> 1,936 references.
+Next: deterministic plain-language roles overlay + describe/tour APIs, then web Big-picture UI. See bottom of this file when complete.
+
 ## Current milestone
 
 The user asked for a simpler, more powerful experience inspired by GitDiagram and similar tools, integrated into Praxi Dev. Core 0.3.0 and the diagram-first web redesign are implemented, pushed and live at https://www.praximations.com/lens and https://www.praximations.com/dev/lens.
