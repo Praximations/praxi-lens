@@ -59,7 +59,7 @@ export function selectOverview(index: ModelIndex, options: OverviewOptions): Ove
   function bundle(members: OverviewSlot[], kind: "quiet" | "overflow", context: string | undefined, partial = true): OverviewSlot {
     const memberIds = members.flatMap(m => m.memberIds);
     const kinds = new Set(memberIds.map(id => index.entity.get(id)?.kind));
-    const noun = kinds.size === 1 ? plural([...kinds][0] ?? "item", memberIds.length) : memberIds.length === 1 ? "item" : "items";
+    const noun = kinds.size === 1 ? kindPlural([...kinds][0] ?? "item", memberIds.length) : memberIds.length === 1 ? "item" : "items";
     if (kind === "overflow" && partial) truncated = true;
     return { id: `bundle:${++bundles}:${memberIds[0]}`, label: `${memberIds.length} ${kind === "quiet" ? "other" : "more"} ${noun}`,
       ...(context ? { context } : {}), memberIds, bundle: kind };
@@ -148,7 +148,7 @@ export function selectOverview(index: ModelIndex, options: OverviewOptions): Ove
   return { slots, representative, truncated };
 }
 
-export function plural(kind: string, count: number): string {
+function kindPlural(kind: string, count: number): string {
   const noun = kind.replaceAll("-", " ").replace(/^directory$/, "folder").replace(/^package reference$/, "package");
   if (count === 1) return noun;
   return noun.endsWith("y") && !/[aeiou]y$/.test(noun) ? noun.slice(0, -1) + "ies" : noun.endsWith("s") ? noun + "es" : noun + "s";

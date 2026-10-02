@@ -1,12 +1,12 @@
 # Generated checkpoint
 
-Updated: 2026-10-02T17:58:04.074Z
+Updated: 2026-10-02T18:07:08.236Z
 
 Read HANDOFF.md for decisions, limitations, and the next task. This file records actual local state; it does not imply a deployment or push.
 
 - Branch: claude/lens-program-visualization-d5dodf
-- HEAD at capture time: e45434d5aac919cea2ffdec4ce56296d506cc999
-- Source SHA-256: 4019d71585530d62ca0566466d548f5aa31f11c721a1c7e12da381bfa7748ad1
+- HEAD at capture time: 4cc8a5129a0f5a2075eee1d1bfaa265629635543
+- Source SHA-256: 67b8a25bf147040e8e3b851e1ba4fb61e39cb9c01db2a18c1889c008367e75b1
 - Node: v22.22.0
 
 ## Validation from this checkpoint
@@ -19,19 +19,17 @@ The digest covers src, tests, examples, scripts, package manifests, and tsconfig
 ## Worktree at capture time
 
 ```text
-M src/adapters/github/index.ts
- M src/adapters/repository/index.ts
- M src/extensions/software/index.ts
+M package-lock.json
+ M package.json
+ M src/adapters/repository/languages.ts
+ M src/explanation/planner.ts
  M src/index.ts
  M src/queries/overview.ts
- M src/queries/query.ts
- M src/system-model/schema.ts
- M src/views/generate.ts
- M src/views/spec.ts
- M tests/repository.test.mjs
-?? src/adapters/repository/languages.ts
-?? src/adapters/repository/manifests.ts
-?? src/queries/groups.ts
-?? src/system-model/model-index.ts
-?? tests/languages.test.mjs
+ M src/system-model/model-index.ts
+ M src/system-model/validate.ts
+?? src/explanation/describe.ts
+?? src/explanation/vocabulary.ts
+?? src/extensions/software/languages.ts
+?? src/interpretation/software-roles.ts
+?? tests/understanding.test.mjs
 ```

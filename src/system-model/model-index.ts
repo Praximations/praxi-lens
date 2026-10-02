@@ -1,5 +1,6 @@
 import type { Component, Entity, Relationship, SemanticGroup, SystemModel } from "./schema.js";
-import { parseSystemModel } from "./validate.js";
+import { validModel } from "./validate.js";
+export { validModel };
 
 /** Lookup structures shared by queries, views and explanations. Built once per validated model. */
 export interface ModelIndex {
@@ -20,26 +21,7 @@ export interface ModelIndex {
   readonly group: ReadonlyMap<string, SemanticGroup>;
 }
 
-type Cached = { model: SystemModel; components: number; relationships: number; groups: number };
-const validated = new WeakMap<object, Cached>();
 const indexes = new WeakMap<SystemModel, ModelIndex>();
-const shape = (m: SystemModel) => ({ components: m.components?.length, relationships: m.relationships?.length, groups: m.semanticGroups?.length });
-
-/**
- * Validates an input once per object identity. Validated models are treated as immutable:
- * clone before editing. A cheap shape check re-validates after obvious additions or removals.
- */
-export function validModel(input: SystemModel): SystemModel {
-  if (input && typeof input === "object") {
-    const hit = validated.get(input);
-    const now = shape(input);
-    if (hit && hit.components === now.components && hit.relationships === now.relationships && hit.groups === now.groups) return hit.model;
-  }
-  const model = parseSystemModel(input);
-  if (input && typeof input === "object") validated.set(input, { model, ...shape(input) } as Cached);
-  validated.set(model, { model, ...shape(model) } as Cached);
-  return model;
-}
 
 export function indexModel(input: SystemModel): ModelIndex {
   const model = validModel(input);
